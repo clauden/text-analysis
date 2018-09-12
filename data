@@ -1,0 +1,6 @@
+vnf general security requirements | R-40813 |  The VNF SHOULD support the use of virtual trusted platform module.
+vnf general security requirements | R-56904 |  The VNF MUST interoperate with the ONAP (SDN) Controller so that it can dynamically modify the firewall rules, ACL rules, QoS rules, virtual routing and forwarding rules.
+vnf general security requirements | R-26586 |  The VNF SHOULD support the ability to work with aliases (e.g., gateways, proxies) to protect and encapsulate resources.
+vnf general security requirements | R-49956 |  The VNF MUST pass all access to applications (Bearer, signaling and OA&M) through various security tools and platforms from ACLs, stateful firewalls and application layer gateways depending on manner of deployment. The application is expected to function (and in some cases, interwork) with these security tools.
+vnf general security requirements | R-69649 |  The VNF MUST have all vulnerabilities patched as soon as possible. Patching shall be controlled via change control process with vulnerabilities disclosed along with mitigation recommendations.
+vnf general security requirements | R-78010 |  The VNF MUST use the NCSP’s IDAM API for Identification, authentication and access control of customer or VNF application users.
