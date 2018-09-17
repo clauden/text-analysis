@@ -5,16 +5,20 @@ import nltk
 from operator import itemgetter as itemgetter
 from pprint import pprint as pp
 from pdb import set_trace 
+import codecs
+
 
 DELIM = '|'
 SPLITTER = re.compile('\\W')
 
+# cluster threshold
+MIN=0.75
 
 def trace():
-  if sys.__stdin__.isatty():
-    pdb.set_trace()
-  else:
-    pass
+  # if sys.__stdin__.isatty():
+  #   return set_trace()
+  #else:
+    return None
 
 
 def dbg(s, label=''):
@@ -54,22 +58,73 @@ def ngrams(s, n=2):
 def similarity(a, b):
   return nltk.jaccard_distance(set(a), set(b))
 
+
+def k_cluster(nodeid, k, distances):
+  cl = []
+  min = 1.0
+  max = 0.0
+
+  # one pass
+  for node in distances:
+    if node != nodeid and node not in cl and distances[node] <= min:
+      min = distances[node]
+      cl.append(node)
+  
+  # remember the closest we got
+  max = min
+
+  return cl, min
+
+
 if __name__ == '__main__':
 
   rules = {}
   wordfreqs = {}
   
 
-  # while True:
-  #   l = sys.stdin.readline().strip()
-  #   rules += l
-  
-  for l in sys.stdin.readlines():
-    ll = l.split(DELIM)
+
+  fd = codecs.open('data', 'r', 'utf-8') if sys.__stdin__.isatty() else sys.stdin
+  for l in fd.readlines():
+  # for l in open('data').readlines() if sys.__stdin__.isatty() else sys.stdin.readlines():
+    pp(l)
+    print(type(l))
+
+    u = l
+    u = l.decode('utf-8')
+    pp(u)
+    
+    # substitute reasonable ASCII approximations to normalize across datasets...
+    # should be abstracted someplace!
+    s = u''
+    for c in u:
+      if c == unichr(0x201c) or c == unichr(0x201d) :
+      # if c == u'\u201c' or c == u'\u201d' :
+        s += '"'
+      elif c == unichr(0x2019):
+        s += "'"
+      else:
+        s += c
+    u = s
+      
+
+    ll = u.split(DELIM)
     if len(ll) != 3: raise "wtf" 
     rules[ll[1]] = ll[2].strip().split()
 
-  
+    print "validating"
+    pp(rules[ll[1]])
+
+    # lose this block...
+    """
+    for r in rules[ll[1]]: 
+      pp("asserting: %s" % r)
+      try:
+        assert(type(r) == 'unicode')
+      except AssertionError:
+        print("apparently it's a %s..." % type(rules[ll[1]]))
+      exit(1)
+    """
+
   for ruleid in rules:
     text = rules[ruleid]
 
@@ -77,8 +132,6 @@ if __name__ == '__main__':
       print("RuleID: " + ruleid)
       pp(text)
       print("====")
-
-    trace()
 
     bg = bigrams(text)
     fd = nltk.FreqDist(bg)
@@ -108,10 +161,30 @@ if __name__ == '__main__':
   pp(mins)
       
 
-    
-
   # word frequency
   wfs = sorted(wordfreqs.items(), key=itemgetter(1))
   ## pp(wfs)
   # fd.plot(10, cumulative=False)
     
+  for ruleid in rules:
+    print("building cluster around %s..." % ruleid)
+    c, m = k_cluster(ruleid, 1, sims[ruleid])
+    print("min distance: %f" % m)
+    if m <= MIN: 
+      print("Cluster found: [%s] %s" % (ruleid, rules[ruleid]))
+      ## print("Cluster found: [%s] %s" % (ruleid, u' '.join(rules[ruleid])))
+
+      rule_text = u' '.join(rules[ruleid])
+      pp(rule_text)
+      print type(rule_text)
+
+      msg = u'Cluster found: ['
+      msg += ruleid
+      msg += u']: '
+      msg += (rule_text)
+      print (msg)
+
+      print(u"Cluster found: [%s] %s" % (ruleid, rule_text))
+      print([(r, ' '.join(rules[r])) for r in c]) 
+    # else: print("no strong cluster found")
+
